@@ -17,7 +17,7 @@ ROLE_MAP = {
     "Technical": Engineer,
     "Operational": OperationsUser,
     "Financial": FinanceUser,
-    "Administration": HRUser,
+    "Administrative": HRUser,
     "Regulatory": ComplianceUser,
     "Executive": ExecutiveUser,
 }
