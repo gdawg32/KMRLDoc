@@ -8,12 +8,6 @@ A web-based platform for managing, classifying, summarizing, and analyzing docum
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Future Enhancements](#future-enhancements)
-- [License](#license)
-
 ---
 
 ## Features
