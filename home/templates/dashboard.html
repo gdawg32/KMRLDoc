@@ -1,15 +1,428 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 p-8">
-    <div class="max-w-3xl mx-auto bg-white p-6 rounded shadow">
-        <h1 class="text-3xl font-bold mb-4">Welcome, {{ user.username }}</h1>
-        <p class="text-gray-700">This is the common dashboard for all users.</p>
-        <a href="{% url 'user_logout' %}" class="text-blue-600 mt-4 inline-block">Logout</a>
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - KMRL Document Intelligence System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .document-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(20, 185, 193, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+    
+    .document-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(20, 185, 193, 0.15);
+        border-color: var(--kmrl-primary);
+    }
+    
+    .search-bar {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .search-bar:focus {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 25px rgba(20, 185, 193, 0.15);
+    }
+    
+    .modal-backdrop {
+        backdrop-filter: blur(8px);
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    .modal-content {
+        animation: slideUp 0.3s ease-out;
+        transform-origin: center bottom;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { transform: translateY(20px) scale(0.95); opacity: 0; }
+        to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    
+    .status-new {
+        background: linear-gradient(135deg, #3B82F6, #2563EB);
+    }
+    
+    .status-read {
+        background: linear-gradient(135deg, #10B981, #059669);
+    }
+    
+    .priority-high {
+        border-left: 4px solid #EF4444;
+    }
+    
+    .priority-normal {
+        border-left: 4px solid #6B7280;
+    }
+    
+    .priority-low {
+        border-left: 4px solid #10B981;
+    }
+
+    /* Mobile Responsive Improvements */
+    @media (max-width: 768px) {
+        .document-card {
+            padding: 1rem;
+        }
+        
+        .document-card .flex {
+            flex-direction: column;
+            space-y: 0.75rem;
+        }
+        
+        .document-card .flex-shrink-0:last-child {
+            display: none;
+        }
+        
+        .badge-container {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .meta-info {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .modal-content {
+            margin: 1rem;
+            max-height: calc(100vh - 2rem);
+        }
+        
+        .modal-body {
+            max-height: calc(100vh - 200px);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-kmrl-light via-white to-blue-50 py-4 sm:py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- User Info Header -->
+        <div class="bg-gradient-to-r from-kmrl-primary to-kmrl-primary-dark rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 text-white shadow-xl">
+            <div class="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-xl flex items-center justify-center mr-3 sm:mr-4 backdrop-blur-sm">
+                        <i class="fas fa-user text-white text-xl sm:text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl lg:text-3xl font-poppins font-bold text-white">
+                            {{ user.first_name|default:user.username }}
+                        </h1>
+                        <div class="flex items-center mt-1">
+                            <span class="bg-white/20 px-3 py-1 rounded-full text-xs sm:text-sm font-medium text-white">
+                                {{ role }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Document Count -->
+                <div class="text-center sm:text-right">
+                    <div class="text-2xl sm:text-3xl font-bold text-white">{{ documents.count|default:"0" }}</div>
+                    <div class="text-white/80 text-sm">Documents Assigned</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="bg-white rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-lg border border-gray-100">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-search text-kmrl-primary text-lg sm:text-xl mr-2 sm:mr-3"></i>
+                <h2 class="text-lg sm:text-xl font-poppins font-bold text-kmrl-secondary">Search Documents</h2>
+            </div>
+            <div class="relative">
+                <input type="text" 
+                       id="searchInput" 
+                       placeholder="Search by document title, content, or keywords..."
+                       class="search-bar w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:border-kmrl-primary focus:outline-none transition-all duration-300 text-base sm:text-lg">
+                <div class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400 text-sm sm:text-base"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents Section -->
+        <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-2 sm:space-y-0">
+                <div class="flex items-center">
+                    <i class="fas fa-folder-open text-kmrl-primary text-lg sm:text-xl mr-2 sm:mr-3"></i>
+                    <h2 class="text-lg sm:text-xl font-poppins font-bold text-kmrl-secondary">Your Documents</h2>
+                </div>
+            </div>
+            
+            {% if documents %}
+            <div id="documentsGrid" class="grid gap-4">
+                {% for doc in documents %}
+                <div class="document-card p-4 sm:p-6 rounded-xl" onclick="openDocumentModal('{{ doc.id }}')">
+                    <div class="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
+                        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-file-pdf text-red-500 text-xl"></i>
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-2 sm:space-y-0">
+                                <h3 class="text-base sm:text-lg font-semibold text-gray-800">{{ doc.title }}</h3>
+                                <div class="badge-container flex items-center space-x-2">
+                                    {% if not doc.processed %}
+                                    <span class="status-new px-2 sm:px-3 py-1 text-white text-xs font-medium rounded-full">New</span>
+                                    {% endif %}
+                                    <span class="px-2 py-1 bg-red-100 text-red-600 text-xs font-medium rounded">
+                                        {% if doc.categories.all %}
+                                            {{ doc.categories.all|join:", " }}
+                                        {% else %}
+                                            Uncategorized
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-3">
+                                {{ doc.summary|default:doc.extracted_text|truncatechars:150 }}
+                            </p>
+                            <div class="meta-info flex items-center text-xs text-gray-500 space-x-3 sm:space-x-4">
+                                <span><i class="fas fa-calendar mr-1"></i>{{ doc.upload_date|date:"M d, Y" }}</span>
+                                <span><i class="fas fa-user mr-1"></i>{{ doc.uploaded_by }}</span>
+                                <span class="hidden sm:inline"><i class="fas fa-language mr-1"></i>{{ doc.detected_language|default:doc.original_language }}</span>
+                                <span class="hidden sm:inline"><i class="fas fa-file mr-1"></i>{{ doc.file.name|slice:"-10:" }}, {{ doc.file.size|filesizeformat }}</span>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 hidden sm:block">
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div id="noResults" class="text-center py-12">
+                <i class="fas fa-search text-gray-300 text-4xl sm:text-6xl mb-4"></i>
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-600 mb-2">No documents found</h3>
+                <p class="text-gray-500">No documents have been assigned to you yet</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
-</body>
-</html>
+</div>
+
+<!-- Document Modal -->
+<div id="documentModal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="modal-content bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden mx-2 sm:mx-0 flex flex-col">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-kmrl-primary to-kmrl-primary-dark p-4 sm:p-6 text-white flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center flex-grow min-w-0 mr-4">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+                        <i id="modalIcon" class="fas fa-file-alt text-white text-lg sm:text-xl"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h2 id="modalTitle" class="text-lg sm:text-xl font-poppins font-bold text-white truncate">Document Title</h2>
+                        <p id="modalMeta" class="text-white/80 text-xs sm:text-sm truncate">Document metadata</p>
+                    </div>
+                </div>
+                <button onclick="closeDocumentModal()" class="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                    <i class="fas fa-times text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body p-4 sm:p-6 overflow-y-auto flex-1 min-h-0">
+            <div class="mb-6">
+                <h3 class="text-base sm:text-lg font-semibold text-kmrl-secondary mb-4 flex items-center">
+                    <i class="fas fa-file-text text-kmrl-primary mr-2"></i>
+                    Document Summary
+                </h3>
+                <div id="modalSummary" class="text-gray-700 text-sm sm:text-base leading-relaxed bg-gray-50 p-3 sm:p-4 rounded-xl">
+                    Document summary will be displayed here...
+                </div>
+            </div>
+
+            <!-- Key Information -->
+            <div id="modalKeyInfo" class="mb-4">
+                <h4 class="font-semibold text-kmrl-secondary mb-3 flex items-center text-sm sm:text-base">
+                    <i class="fas fa-key text-kmrl-primary mr-2"></i>
+                    Key Information
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4" id="keyInfoGrid">
+                    <!-- Key info will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="border-t border-gray-200 p-4 sm:p-6 bg-white flex flex-col sm:flex-row gap-3 flex-shrink-0">
+            <button id="downloadBtn" onclick="downloadDocument()" class="flex-1 bg-gradient-to-r from-kmrl-primary to-kmrl-primary-dark text-white font-semibold py-3 px-4 sm:px-6 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300 group text-sm sm:text-base">
+                <i class="fas fa-download mr-2 group-hover:scale-110 transition-transform duration-300"></i>
+                Download Document
+            </button>
+            <button onclick="closeDocumentModal()" class="px-4 sm:px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 text-sm sm:text-base">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+    // Document data from Django
+    const documentData = {
+        {% for doc in documents %}
+        "{{ doc.id }}": {
+            title: "{{ doc.title|escapejs }}",
+            meta: "{{ doc.file.name|slice:'-10:' }} • {{ doc.file.size|filesizeformat }} • {{ doc.upload_date|date:'M d, Y' }}",
+            summary: "{{ doc.summary|default:doc.extracted_text|truncatechars:500|escapejs }}",
+            keyInfo: [
+                { label: "Category", value: "{{ doc.categories.all.0.name|default:'Uncategorized'|escapejs }}", class: "text-blue-600" },
+                { label: "Department", value: "{{ doc.uploaded_by.username|default:'System'|escapejs }}", class: "text-green-600" },
+                { label: "Language", value: "{{ doc.detected_language|default:doc.original_language|default:'English' }}", class: "text-purple-600" },
+                { label: "Status", value: "{% if doc.processed %}Processed{% else %}Processing{% endif %}", class: "{% if doc.processed %}text-green-600{% else %}text-yellow-600{% endif %}" },
+                { label: "File Size", value: "{{ doc.file.size|filesizeformat }}", class: "text-gray-600" },
+                { label: "Upload Date", value: "{{ doc.upload_date|date:'M d, Y' }}", class: "text-gray-600" }
+            ],
+            fileUrl: "{{ doc.file.url }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    let currentDocId = null;
+
+    // Open document modal
+    function openDocumentModal(docId) {
+        console.log('Opening modal for document:', docId); // Debug log
+        
+        const doc = documentData[docId];
+        if (!doc) {
+            console.error('Document not found:', docId);
+            return;
+        }
+
+        currentDocId = docId;
+
+        // Update modal content
+        document.getElementById('modalTitle').textContent = doc.title;
+        document.getElementById('modalMeta').textContent = doc.meta;
+        document.getElementById('modalSummary').textContent = doc.summary || 'No summary available for this document.';
+
+        // Populate key information
+        const keyInfoGrid = document.getElementById('keyInfoGrid');
+        keyInfoGrid.innerHTML = '';
+        
+        doc.keyInfo.forEach(info => {
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'bg-gray-50 p-3 rounded-lg border border-gray-100';
+            infoDiv.innerHTML = `
+                <div class="text-xs text-gray-500 uppercase tracking-wide">${info.label}</div>
+                <div class="font-semibold ${info.class} text-sm">${info.value}</div>
+            `;
+            keyInfoGrid.appendChild(infoDiv);
+        });
+
+        // Show modal
+        const modal = document.getElementById('documentModal');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Close document modal
+    function closeDocumentModal() {
+        const modal = document.getElementById('documentModal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        currentDocId = null;
+    }
+
+    // Download document
+    function downloadDocument() {
+        if (currentDocId && documentData[currentDocId]) {
+            const fileUrl = documentData[currentDocId].fileUrl;
+            
+            // Create a temporary link to trigger download
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.download = documentData[currentDocId].title;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Show success message
+            showNotification('Document download started!', 'success');
+        } else {
+            showNotification('Unable to download document. Please try again.', 'error');
+        }
+    }
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const documentCards = document.querySelectorAll('.document-card');
+        const noResults = document.getElementById('noResults');
+        let visibleCount = 0;
+
+        documentCards.forEach(card => {
+            const title = card.querySelector('h3').textContent.toLowerCase();
+            const content = card.querySelector('p').textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || content.includes(searchTerm)) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Show/hide no results message
+        if (visibleCount === 0 && searchTerm.length > 0) {
+            if (noResults) noResults.classList.remove('hidden');
+        } else {
+            if (noResults) noResults.classList.add('hidden');
+        }
+    });
+
+    // Modal event handlers
+    document.getElementById('documentModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDocumentModal();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !document.getElementById('documentModal').classList.contains('hidden')) {
+            closeDocumentModal();
+        }
+    });
+
+    // Simple notification function
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            'bg-blue-500'
+        } text-white`;
+        notification.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // Debug: Log available documents on page load
+    console.log('Available documents:', Object.keys(documentData));
+</script>
+{% endblock %}
