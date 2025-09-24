@@ -1,0 +1,751 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - KMRL Document Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: linear-gradient(135deg, var(--kmrl-primary), var(--kmrl-primary-dark));
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(20, 185, 193, 0.2);
+    }
+    
+    .upload-zone {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border: 2px dashed #cbd5e0;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-zone:hover,
+    .upload-zone.dragover {
+        border-color: var(--kmrl-primary);
+        background: linear-gradient(135deg, rgba(20, 185, 193, 0.05) 0%, rgba(20, 185, 193, 0.1) 100%);
+    }
+    
+    .document-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 4px solid transparent;
+    }
+    
+    .document-card:hover {
+        border-left-color: var(--kmrl-primary);
+        transform: translateX(4px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .status-processing {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    }
+    
+    .status-completed {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+    
+    .status-uploaded {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+    }
+    
+    .filter-chip {
+        transition: all 0.2s ease;
+    }
+    
+    .filter-chip:hover {
+        transform: scale(1.05);
+    }
+    
+    .filter-chip.active {
+        background: var(--kmrl-primary);
+        color: white;
+    }
+    
+    .progress-bar {
+        background: linear-gradient(90deg, var(--kmrl-primary), var(--kmrl-primary-light));
+        animation: progress-animation 2s ease-in-out infinite;
+    }
+    
+    @keyframes progress-animation {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+<div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-6 text-center">Create User</h2>
+        {% if message %}
+            <div class="bg-green-100 text-green-800 p-2 mb-4 rounded">{{ message }}</div>
+        {% endif %}
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-gray-700">Email</label>
+                <input type="email" name="email" required
+                       class="mt-1 block w-full p-2 border border-gray-300 rounded"/>
+            </div>
+            <div>
+                <label class="block text-gray-700">Password</label>
+                <input type="password" name="password" required
+                       class="mt-1 block w-full p-2 border border-gray-300 rounded"/>
+            </div>
+            <div>
+                <label class="block text-gray-700">Department</label>
+                <select name="department" required
+                        class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                    <option value="">Select Department</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit"
+                    class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Create User</button>
+        </form>
+    </div>
+
+
+
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div class="mb-6 lg:mb-0">
+                    <h1 class="text-3xl lg:text-4xl font-poppins font-bold text-kmrl-secondary mb-2">
+                        <i class="fas fa-tachometer-alt text-kmrl-primary mr-3"></i>
+                        Admin Dashboard
+                    </h1>
+                    <p class="text-kmrl-gray text-lg">Manage and monitor your document processing system</p>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="openUploadModal()" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-kmrl-primary to-kmrl-primary-dark text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300">
+                        <i class="fas fa-upload mr-2"></i>
+                        Upload Document
+                    </button>
+                    <button class="inline-flex items-center px-6 py-3 border-2 border-kmrl-primary text-kmrl-primary font-semibold rounded-xl hover:bg-kmrl-primary hover:text-white transition-all duration-300">
+                        <i class="fas fa-download mr-2"></i>
+                        Export Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Documents -->
+            <div class="stats-card bg-gradient-to-br from-kmrl-primary to-kmrl-primary-dark text-white p-6 rounded-2xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-kmrl-light text-sm font-medium">Total Documents</p>
+                        <p class="text-3xl font-bold">1,247</p>
+                        <p class="text-kmrl-light text-xs mt-1">
+                            <i class="fas fa-arrow-up mr-1"></i>+12% this month
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-file-alt text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processing -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Processing</p>
+                        <p class="text-3xl font-bold text-orange-500">23</p>
+                        <p class="text-gray-500 text-xs mt-1">
+                            <i class="fas fa-clock mr-1"></i>In progress
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-cog text-orange-500 text-2xl animate-spin"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed Today -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Completed Today</p>
+                        <p class="text-3xl font-bold text-green-500">89</p>
+                        <p class="text-gray-500 text-xs mt-1">
+                            <i class="fas fa-check mr-1"></i>Success rate: 98.5%
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Storage Used -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Storage Used</p>
+                        <p class="text-3xl font-bold text-purple-500">2.3GB</p>
+                        <p class="text-gray-500 text-xs mt-1">
+                            <i class="fas fa-hdd mr-1"></i>78% of 3GB limit
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-database text-purple-500 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role-Based Document Distribution -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+            <h2 class="text-2xl font-poppins font-bold text-kmrl-secondary mb-6">
+                <i class="fas fa-sitemap text-kmrl-primary mr-3"></i>
+                Department Distribution
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl hover:shadow-md transition-all duration-300">
+                    <div class="w-12 h-12 bg-blue-500 rounded-full mx-auto mb-3 flex items-center justify-center">
+                        <i class="fas fa-calculator text-white text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">Finance</h3>
+                    <p class="text-2xl font-bold text-blue-500">342</p>
+                    <p class="text-xs text-gray-500">Documents</p>
+                </div>
+
+                <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl hover:shadow-md transition-all duration-300">
+                    <div class="w-12 h-12 bg-green-500 rounded-full mx-auto mb-3 flex items-center justify-center">
+                        <i class="fas fa-cogs text-white text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">Operations</h3>
+                    <p class="text-2xl font-bold text-green-500">198</p>
+                    <p class="text-xs text-gray-500">Documents</p>
+                </div>
+
+                <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl hover:shadow-md transition-all duration-300">
+                    <div class="w-12 h-12 bg-purple-500 rounded-full mx-auto mb-3 flex items-center justify-center">
+                        <i class="fas fa-users text-white text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">HR</h3>
+                    <p class="text-2xl font-bold text-purple-500">156</p>
+                    <p class="text-xs text-gray-500">Documents</p>
+                </div>
+
+                <div class="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-xl hover:shadow-md transition-all duration-300">
+                    <div class="w-12 h-12 bg-red-500 rounded-full mx-auto mb-3 flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">Compliance</h3>
+                    <p class="text-2xl font-bold text-red-500">89</p>
+                    <p class="text-xs text-gray-500">Documents</p>
+                </div>
+
+                <div class="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl hover:shadow-md transition-all duration-300">
+                    <div class="w-12 h-12 bg-orange-500 rounded-full mx-auto mb-3 flex items-center justify-center">
+                        <i class="fas fa-tools text-white text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">Technical</h3>
+                    <p class="text-2xl font-bold text-orange-500">462</p>
+                    <p class="text-xs text-gray-500">Documents</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+            <h2 class="text-2xl font-poppins font-bold text-kmrl-secondary mb-6">
+                <i class="fas fa-search text-kmrl-primary mr-3"></i>
+                Search & Filter Documents
+            </h2>
+            
+            <!-- Search Bar -->
+            <div class="mb-6">
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Search documents by title, content, or keywords..." class="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:border-kmrl-primary focus:outline-none transition-colors duration-300 text-lg">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filter Chips -->
+            <div class="flex flex-wrap gap-3 mb-6">
+                <button class="filter-chip active px-4 py-2 rounded-full bg-kmrl-primary text-white font-medium text-sm">
+                    All Documents
+                </button>
+                <button class="filter-chip px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium text-sm">
+                    Finance
+                </button>
+                <button class="filter-chip px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium text-sm">
+                    Operations
+                </button>
+                <button class="filter-chip px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium text-sm">
+                    HR
+                </button>
+                <button class="filter-chip px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium text-sm">
+                    Compliance
+                </button>
+                <button class="filter-chip px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium text-sm">
+                    Technical
+                </button>
+            </div>
+            
+            <!-- Advanced Filters -->
+            <div class="grid md:grid-cols-4 gap-4">
+                <select class="px-4 py-3 border border-gray-200 rounded-lg focus:border-kmrl-primary focus:outline-none">
+                    <option>All Categories</option>
+                    <option>Technical Reports</option>
+                    <option>Financial Documents</option>
+                    <option>HR Policies</option>
+                    <option>Compliance Records</option>
+                </select>
+                
+                <select class="px-4 py-3 border border-gray-200 rounded-lg focus:border-kmrl-primary focus:outline-none">
+                    <option>All Languages</option>
+                    <option>English</option>
+                    <option>Malayalam</option>
+                    <option>Hindi</option>
+                    <option>Tamil</option>
+                </select>
+                
+                <input type="date" class="px-4 py-3 border border-gray-200 rounded-lg focus:border-kmrl-primary focus:outline-none">
+                
+                <select class="px-4 py-3 border border-gray-200 rounded-lg focus:border-kmrl-primary focus:outline-none">
+                    <option>Newest First</option>
+                    <option>Oldest First</option>
+                    <option>A-Z</option>
+                    <option>Z-A</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Document Feed -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-poppins font-bold text-kmrl-secondary">
+                    <i class="fas fa-folder-open text-kmrl-primary mr-3"></i>
+                    Document Feed
+                </h2>
+                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Last updated: 2 mins ago</span>
+                </div>
+            </div>
+            
+            <!-- Document Cards -->
+            <div class="space-y-4">
+                <!-- Document 1 - Processing -->
+                <div class="document-card bg-gray-50 hover:bg-white p-6 rounded-xl border border-gray-200">
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-pdf text-orange-500 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold text-gray-800 truncate">Metro_Safety_Protocol_2025.pdf</h3>
+                                <span class="status-processing px-3 py-1 rounded-full text-white text-xs font-medium">
+                                    <i class="fas fa-cog animate-spin mr-1"></i>Processing
+                                </span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-3 line-clamp-2">
+                                Currently processing document content extraction and language detection. ETA: 3 minutes.
+                            </p>
+                            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
+                                <span><i class="fas fa-tag mr-1"></i>Technical</span>
+                                <span><i class="fas fa-user mr-1"></i>Admin User</span>
+                                <span><i class="fas fa-calendar mr-1"></i>Sept 24, 2025</span>
+                                <span><i class="fas fa-file-pdf mr-1"></i>PDF, 2.3MB</span>
+                            </div>
+                            <!-- Progress Bar -->
+                            <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
+                                <div class="progress-bar h-2 rounded-full w-3/4"></div>
+                            </div>
+                            <div class="flex space-x-3">
+                                <button class="text-kmrl-primary hover:text-kmrl-primary-dark font-medium text-sm">
+                                    <i class="fas fa-eye mr-1"></i>View Status
+                                </button>
+                                <button class="text-gray-500 hover:text-gray-700 font-medium text-sm">
+                                    <i class="fas fa-pause mr-1"></i>Pause
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document 2 - Completed -->
+                <div class="document-card bg-gray-50 hover:bg-white p-6 rounded-xl border border-gray-200">
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-word text-blue-500 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold text-gray-800 truncate">Financial_Audit_Report_Q3_2025.docx</h3>
+                                <span class="status-completed px-3 py-1 rounded-full text-white text-xs font-medium">
+                                    <i class="fas fa-check mr-1"></i>Completed
+                                </span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-3">
+                                Comprehensive financial audit report for Q3 2025 covering revenue analysis, expenditure breakdown, and budget variance analysis. The document outlines key financial metrics and provides recommendations for cost optimization and revenue enhancement strategies.
+                            </p>
+                            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
+                                <span><i class="fas fa-tag mr-1"></i>Finance</span>
+                                <span><i class="fas fa-language mr-1"></i>English</span>
+                                <span><i class="fas fa-user mr-1"></i>Finance Team</span>
+                                <span><i class="fas fa-calendar mr-1"></i>Sept 23, 2025</span>
+                                <span><i class="fas fa-file-word mr-1"></i>Word, 1.8MB</span>
+                            </div>
+                            <div class="flex space-x-3">
+                                <button class="text-kmrl-primary hover:text-kmrl-primary-dark font-medium text-sm">
+                                    <i class="fas fa-eye mr-1"></i>View Summary
+                                </button>
+                                <button class="text-kmrl-primary hover:text-kmrl-primary-dark font-medium text-sm">
+                                    <i class="fas fa-file-alt mr-1"></i>View Original
+                                </button>
+                                <button class="text-kmrl-primary hover:text-kmrl-primary-dark font-medium text-sm">
+                                    <i class="fas fa-download mr-1"></i>Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document 3 - Completed -->
+                <div class="document-card bg-gray-50 hover:bg-white p-6 rounded-xl border border-gray-200">
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-excel text-green-500 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold text-gray-800 truncate">Employee_Performance_Data_2025.xlsx</h3>
+                                <span class="status-completed px-3 py-1 rounded-full text-white text-xs font-medium">
+                                    <i class="fas fa-check mr-1"></i>Completed
+                                </span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-3">
+                                Employee performance metrics and KPI tracking data for 2025. Contains detailed performance scores, department-wise analysis, and individual employee evaluations with recommendations for professional development and career advancement.
+                            </p>
+                            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
+                                <span><i class="fas fa-tag mr-1"></i>HR</span>
+                                <span><i class="fas fa-language mr-1"></i>English</span>
+                                <span><i class="fas fa-user mr-1"></i>HR Manager</span>
+                                <span><i class="fas fa-calendar mr-1"></i>Sept 22, 2025</span>
+                                <span><i class="fas fa-file-excel mr-1"></i>Excel, 956KB</span>
+                            </div>
+                            <div class="flex space-x-3">
+                                <button class="text-kmrl-primary hover:text-kmrl-primary-dark font-medium text-sm">
+                                    <i class="fas fa-eye mr-1"></i>View Summary
+                                </button>
+                                <button class="text-kmrl-primary hover:text-kmrl-primary-dark font-medium text-sm">
+                                    <i class="fas fa-file-alt mr-1"></i>View Original
+                                </button>
+                                <button class="text-kmrl-primary hover:text-kmrl-primary-dark font-medium text-sm">
+                                    <i class="fas fa-download mr-1"></i>Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document 4 - Uploaded -->
+                <div class="document-card bg-gray-50 hover:bg-white p-6 rounded-xl border border-gray-200">
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-image text-purple-500 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold text-gray-800 truncate">Station_Blueprint_Scan_MG_Road.jpg</h3>
+                                <span class="status-uploaded px-3 py-1 rounded-full text-white text-xs font-medium">
+                                    <i class="fas fa-upload mr-1"></i>Uploaded
+                                </span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-3">
+                                Document queued for processing. OCR and text extraction will begin shortly for this scanned blueprint document.
+                            </p>
+                            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
+                                <span><i class="fas fa-tag mr-1"></i>Operations</span>
+                                <span><i class="fas fa-user mr-1"></i>Operations Team</span>
+                                <span><i class="fas fa-calendar mr-1"></i>Sept 24, 2025</span>
+                                <span><i class="fas fa-file-image mr-1"></i>JPG, 4.2MB</span>
+                            </div>
+                            <div class="flex space-x-3">
+                                <button class="text-kmrl-primary hover:text-kmrl-primary-dark font-medium text-sm">
+                                    <i class="fas fa-play mr-1"></i>Start Processing
+                                </button>
+                                <button class="text-gray-500 hover:text-gray-700 font-medium text-sm">
+                                    <i class="fas fa-eye mr-1"></i>Preview
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Load More Button -->
+            <div class="text-center mt-8">
+                <button class="inline-flex items-center px-6 py-3 border border-kmrl-primary text-kmrl-primary font-semibold rounded-xl hover:bg-kmrl-primary hover:text-white transition-all duration-300">
+                    <i class="fas fa-chevron-down mr-2"></i>
+                    Load More Documents
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-poppins font-bold text-kmrl-secondary">
+                    <i class="fas fa-upload text-kmrl-primary mr-3"></i>
+                    Upload Documents
+                </h2>
+                <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-600 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <!-- Upload Zone -->
+            <div id="uploadZone" class="upload-zone p-12 rounded-2xl text-center mb-6 cursor-pointer">
+                <div class="max-w-sm mx-auto">
+                    <i class="fas fa-cloud-upload-alt text-6xl text-gray-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">Drop files here or click to browse</h3>
+                    <p class="text-gray-500 mb-4">Supports: PDF, Word, Excel, Images (Max 10MB each)</p>
+                    <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" class="hidden">
+                    <button onclick="document.getElementById('fileInput').click()" class="inline-flex items-center px-6 py-3 bg-kmrl-primary text-white font-semibold rounded-xl hover:bg-kmrl-primary-dark transition-all duration-300">
+                        <i class="fas fa-folder-open mr-2"></i>
+                        Choose Files
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Selected Files List -->
+            <div id="selectedFiles" class="space-y-3 mb-6 hidden">
+                <h4 class="font-semibold text-gray-700">Selected Files:</h4>
+                <!-- Files will be populated by JavaScript -->
+            </div>
+            
+            <!-- Upload Options -->
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                    <select class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:border-kmrl-primary focus:outline-none">
+                        <option>Auto-detect</option>
+                        <option>Finance</option>
+                        <option>Operations</option>
+                        <option>HR</option>
+                        <option>Compliance</option>
+                        <option>Technical</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                    <select class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:border-kmrl-primary focus:outline-none">
+                        <option>Normal</option>
+                        <option>High</option>
+                        <option>Urgent</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Processing Options -->
+            <div class="bg-gray-50 p-4 rounded-xl mb-6">
+                <h4 class="font-semibold text-gray-700 mb-3">Processing Options</h4>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" checked class="mr-3 h-4 w-4 text-kmrl-primary">
+                        <span class="text-sm">Auto text extraction</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" checked class="mr-3 h-4 w-4 text-kmrl-primary">
+                        <span class="text-sm">Language detection</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" checked class="mr-3 h-4 w-4 text-kmrl-primary">
+                        <span class="text-sm">Auto categorization</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" checked class="mr-3 h-4 w-4 text-kmrl-primary">
+                        <span class="text-sm">Generate summary</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Upload Button -->
+            <div class="flex space-x-4">
+                <button onclick="startUpload()" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-kmrl-primary to-kmrl-primary-dark text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300">
+                    <i class="fas fa-rocket mr-2"></i>
+                    Start Upload & Processing
+                </button>
+                <button onclick="closeUploadModal()" class="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300">
+                    Cancel
+                </button>
+            </div>
+        </div>
+        
+
+
+
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Upload Modal Functions
+    function openUploadModal() {
+        document.getElementById('uploadModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeUploadModal() {
+        document.getElementById('uploadModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        // Reset modal state
+        document.getElementById('selectedFiles').classList.add('hidden');
+        document.getElementById('fileInput').value = '';
+    }
+    
+    // File Upload Handling
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const selectedFilesDiv = document.getElementById('selectedFiles');
+    
+    // Drag and drop functionality
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+    
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+    });
+    
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        handleFiles(files);
+    });
+    
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+    
+    function handleFiles(files) {
+        if (files.length > 0) {
+            selectedFilesDiv.classList.remove('hidden');
+            selectedFilesDiv.innerHTML = '<h4 class="font-semibold text-gray-700 mb-3">Selected Files:</h4>';
+            
+            Array.from(files).forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200';
+                fileItem.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-file-alt text-kmrl-primary"></i>
+                        <div>
+                            <p class="font-medium text-gray-800">${file.name}</p>
+                            <p class="text-sm text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                    </div>
+                    <button onclick="removeFile(${index})" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                selectedFilesDiv.appendChild(fileItem);
+            });
+        }
+    }
+    
+    function removeFile(index) {
+        // Implementation for removing specific file
+        console.log('Remove file at index:', index);
+    }
+    
+    function startUpload() {
+        // Implementation for starting upload
+        console.log('Starting upload...');
+        closeUploadModal();
+        
+        // Show success message (you can replace this with actual upload logic)
+        showNotification('Upload started successfully! Processing will begin automatically.', 'success');
+    }
+    
+    // Filter chip functionality
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            // Remove active class from all chips
+            document.querySelectorAll('.filter-chip').forEach(c => {
+                c.classList.remove('active');
+                c.classList.add('bg-gray-100', 'text-gray-700');
+                c.classList.remove('bg-kmrl-primary', 'text-white');
+            });
+            
+            // Add active class to clicked chip
+            chip.classList.add('active');
+            chip.classList.remove('bg-gray-100', 'text-gray-700');
+            chip.classList.add('bg-kmrl-primary', 'text-white');
+            
+            // Filter documents (you can implement the actual filtering logic here)
+            console.log('Filtering by:', chip.textContent.trim());
+        });
+    });
+    
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        // Implement search logic here
+        console.log('Searching for:', searchTerm);
+    });
+    
+    // Notification system
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            'bg-blue-500'
+        } text-white`;
+        notification.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+    
+    // Auto-refresh functionality (simulate real-time updates)
+    setInterval(() => {
+        // Update processing status, refresh counters, etc.
+        // This is where you'd make API calls to get updated data
+    }, 30000); // Refresh every 30 seconds
+</script>
+{% endblock %}

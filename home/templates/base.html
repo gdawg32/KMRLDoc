@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kochi Metro Rail Ltd - Connecting Kerala's Future{% endblock %}</title>
+    
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'kmrl-primary': '#14B9C1',
+                        'kmrl-primary-dark': '#0FA5AC',
+                        'kmrl-primary-light': '#1ECFD7',
+                        'kmrl-secondary': '#2C3E50',
+                        'kmrl-accent': '#E67E22',
+                        'kmrl-gray': '#7F8C8D',
+                        'kmrl-light': '#F8FAFA',
+                        'kerala-gold': '#FFD700',
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                        'poppins': ['Poppins', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'fade-in': 'fadeIn 0.8s ease-out',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        slideUp: {
+                            'from': { transform: 'translateY(30px)', opacity: '0' },
+                            'to': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            'from': { opacity: '0' },
+                            'to': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Additional Custom Styles -->
+    <style>
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #14B9C1, #0FA5AC);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(20, 185, 193, 0.15);
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="font-inter bg-gradient-to-br from-kmrl-light via-white to-blue-50 min-h-screen">
+    <!-- Navigation Header -->
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 lg:h-20">
+                <!-- Logo Section -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <a href="{% url 'home' %}" class="flex items-center space-x-2 sm:space-x-3 group">
+                        <div class="relative">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-kmrl-primary to-kmrl-primary-dark rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                                <i class="fas fa-file-invoice text-white text-lg sm:text-xl lg:text-2xl group-hover:scale-110 transition-transform duration-300"></i>
+                            </div>
+                            <div class="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-kerala-gold rounded-full animate-pulse"></div>
+                        </div>
+                        
+                        <!-- Mobile Logo -->
+                        <div class="block sm:hidden">
+                            <img src="https://upload.wikimedia.org/wikipedia/en/1/18/Koch_Metro_Logo.png" alt="Kochi Metro Logo" class="h-8 w-auto object-contain" />
+                        </div>
+                        
+                        <!-- Desktop Logo -->
+                        <div class="hidden sm:block">
+                            <img src="https://upload.wikimedia.org/wikipedia/en/1/18/Koch_Metro_Logo.png" alt="Kochi Metro Logo" class="h-10 lg:h-12 w-auto object-contain" />
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden lg:flex items-center space-x-8">
+                    <a href="{% url 'home' %}" class="nav-link text-kmrl-secondary hover:text-kmrl-primary font-medium transition-all duration-300 relative group">
+                        Home
+                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-kmrl-primary transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    <a href="#" class="nav-link text-kmrl-secondary hover:text-kmrl-primary font-medium transition-all duration-300 relative group">
+                        Services
+                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-kmrl-primary transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    <a href="#" class="nav-link text-kmrl-secondary hover:text-kmrl-primary font-medium transition-all duration-300 relative group">
+                        Routes
+                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-kmrl-primary transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    <a href="#" class="nav-link text-kmrl-secondary hover:text-kmrl-primary font-medium transition-all duration-300 relative group">
+                        About
+                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-kmrl-primary transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    <a href="#" class="nav-link text-kmrl-secondary hover:text-kmrl-primary font-medium transition-all duration-300 relative group">
+                        Contact
+                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-kmrl-primary transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                </div>
+
+                <!-- CTA Button & Mobile Menu -->
+                <div class="flex items-center space-x-4">
+                    <a href="#" class="hidden sm:inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-kmrl-primary to-kmrl-primary-dark text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all duration-300">
+                        <i class="fas fa-ticket-alt mr-2"></i>
+                        Book Ticket
+                    </a>
+                    
+                    <!-- Mobile Menu Button -->
+                    <button id="mobile-menu-btn" class="lg:hidden p-2 rounded-md text-kmrl-secondary hover:text-kmrl-primary hover:bg-gray-100 transition-colors duration-300">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div id="mobile-menu" class="lg:hidden hidden bg-white/95 backdrop-blur-md border-t border-gray-100">
+            <div class="px-4 py-6 space-y-4">
+                <a href="{% url 'home' %}" class="block py-3 px-4 text-kmrl-secondary hover:text-kmrl-primary hover:bg-kmrl-primary/5 rounded-lg font-medium transition-all duration-300">
+                    <i class="fas fa-home mr-3"></i>Home
+                </a>
+                <a href="#" class="block py-3 px-4 text-kmrl-secondary hover:text-kmrl-primary hover:bg-kmrl-primary/5 rounded-lg font-medium transition-all duration-300">
+                    <i class="fas fa-concierge-bell mr-3"></i>Services
+                </a>
+                <a href="#" class="block py-3 px-4 text-kmrl-secondary hover:text-kmrl-primary hover:bg-kmrl-primary/5 rounded-lg font-medium transition-all duration-300">
+                    <i class="fas fa-route mr-3"></i>Routes
+                </a>
+                <a href="#" class="block py-3 px-4 text-kmrl-secondary hover:text-kmrl-primary hover:bg-kmrl-primary/5 rounded-lg font-medium transition-all duration-300">
+                    <i class="fas fa-info-circle mr-3"></i>About
+                </a>
+                <a href="#" class="block py-3 px-4 text-kmrl-secondary hover:text-kmrl-primary hover:bg-kmrl-primary/5 rounded-lg font-medium transition-all duration-300">
+                    <i class="fas fa-envelope mr-3"></i>Contact
+                </a>
+                <div class="pt-4 border-t border-gray-200">
+                    <a href="#" class="flex items-center justify-center py-3 px-4 bg-gradient-to-r from-kmrl-primary to-kmrl-primary-dark text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-ticket-alt mr-2"></i>
+                        Book Ticket
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-br from-kmrl-secondary via-slate-800 to-kmrl-secondary-dark text-white mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-kmrl-primary to-kmrl-primary-light rounded-full flex items-center justify-center">
+                            <i class="fas fa-subway text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-poppins font-bold text-xl">KMRL</h3>
+                            <p class="text-gray-300 text-sm">Kochi Metro Rail Ltd</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed">
+                        Connecting Kerala's future with world-class metro rail services. Experience safe, efficient, and eco-friendly transportation.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 bg-kmrl-primary/20 hover:bg-kmrl-primary rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110">
+                            <i class="fab fa-facebook text-kmrl-primary hover:text-white"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-kmrl-primary/20 hover:bg-kmrl-primary rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110">
+                            <i class="fab fa-twitter text-kmrl-primary hover:text-white"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-kmrl-primary/20 hover:bg-kmrl-primary rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110">
+                            <i class="fab fa-instagram text-kmrl-primary hover:text-white"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-kmrl-primary/20 hover:bg-kmrl-primary rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110">
+                            <i class="fab fa-linkedin text-kmrl-primary hover:text-white"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="font-poppins font-semibold text-lg mb-6">Quick Links</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-300 hover:text-kmrl-primary transition-colors duration-300">Home</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-kmrl-primary transition-colors duration-300">Route Map</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-kmrl-primary transition-colors duration-300">Ticket Booking</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-kmrl-primary transition-colors duration-300">Schedule</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-kmrl-primary transition-colors duration-300">News & Updates</a></li>
+                    </ul>
+                </div>
+
+                <!-- Services -->
+                <div>
+                    <h4 class="font-poppins font-semibold text-lg mb-6">Services</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-300 hover:text-kmrl-primary transition-colors duration-300">Metro Services</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-kmrl-primary transition-colors duration-300">Feeder Bus</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-kmrl-primary transition-colors duration-300">Parking Facilities</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-kmrl-primary transition-colors duration-300">Accessibility</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-kmrl-primary transition-colors duration-300">Lost & Found</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact Info -->
+                <div>
+                    <h4 class="font-poppins font-semibold text-lg mb-6">Contact Us</h4>
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-map-marker-alt text-kmrl-primary mt-1"></i>
+                            <p class="text-gray-300">KMRL Office, Kochi, Kerala, India</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-phone text-kmrl-primary"></i>
+                            <p class="text-gray-300">+91 484 123 4567</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-envelope text-kmrl-primary"></i>
+                            <p class="text-gray-300">info@kochimetro.org</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-clock text-kmrl-primary"></i>
+                            <p class="text-gray-300">24/7 Customer Support</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Bar -->
+            <div class="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-300 text-sm">
+                    © 2025 Kochi Metro Rail Ltd. All rights reserved.
+                </p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-300 hover:text-kmrl-primary text-sm transition-colors duration-300">Privacy Policy</a>
+                    <a href="#" class="text-gray-300 hover:text-kmrl-primary text-sm transition-colors duration-300">Terms of Service</a>
+                    <a href="#" class="text-gray-300 hover:text-kmrl-primary text-sm transition-colors duration-300">Accessibility</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Mobile Menu -->
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            const icon = mobileMenuBtn.querySelector('i');
+            if (mobileMenu.classList.contains('hidden')) {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            } else {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            }
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
