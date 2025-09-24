@@ -36,8 +36,6 @@ A web-based platform for managing, classifying, summarizing, and analyzing docum
 - **Frontend:** HTML, TailwindCSS, JavaScript  
 - **Machine Learning / NLP:** scikit-learn, joblib, PyPDF2, python-docx, pandas, numpy  
 - **AI Integration:** Google Generative AI for summarization  
-- **Utilities:** pdfplumber, tqdm, requests, python-magic  
-
 ---
 
 Live Demo: [KMRLDoc](https://kmrldoc.pythonanywhere.com/)
