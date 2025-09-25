@@ -13,6 +13,21 @@ import numpy as np
 from joblib import load
 import google.generativeai as genai
 
+
+# -----------------------
+# KEYWORD BOOSTING
+# -----------------------
+KEYWORD_BOOSTS = {
+    "Financial": ["budget", "invoice", "revenue", "expenditure", "tax", "fund", "financial", "audit", "cost", "profit", "loss"],
+    "Operational": ["maintenance", "schedule", "operation", "logistics", "shift", "inspection"],
+    "Administrative": ["policy", "HR", "HR Policy", "approval", "circular", "order", "governance", "hiring", "payroll", "holiday", "leave", "employees", "HR"],
+    "Regulatory": ["compliance", "regulation", "audit", "regulation", "legal", "licence", "permission", "certification", "dispute", "fine", "penalty", "court", "law", "Conﬁdential"],
+    "Technical": ["engineering", "design", "specification", "system", "component", "technical", "drawing", "fixing", "installation", "repair", "maintenance"],
+    "Executive": ["board", "chairman", "executive", "decision", "leadership", "minutes","board", "chairman", "executive", "decision", "leadership", "minutes" ],
+}
+BOOST_VALUE = 0.15 
+
+
 # -----------------------
 # FILE EXTRACTION
 # -----------------------
@@ -162,6 +177,16 @@ def classify_text(text: str, vect, clf, labels, thr_arr, top_k_fallback=2):
     t = clean_text(text)
     probs_arr = clf.predict_proba(vect.transform([t]))[0]
 
+    # --- Keyword boosting ---
+    lower_text = t.lower()
+    for i, label in enumerate(labels):
+        if label in KEYWORD_BOOSTS:
+            for kw in KEYWORD_BOOSTS[label]:
+                if kw.lower() in lower_text:
+                    probs_arr[i] = min(1.0, probs_arr[i] + BOOST_VALUE)
+                    break  # only boost once per label
+
+    # Apply thresholds
     chosen = [labels[i] for i in range(len(labels)) if probs_arr[i] >= thr_arr[i]]
 
     if not chosen:

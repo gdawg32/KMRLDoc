@@ -10,5 +10,6 @@ urlpatterns = [
     path("login/", views.user_login, name="user_login"),
     path("dashboard/", views.dashboard, name="dashboard"),
     path("logout/", views.user_logout, name="user_logout"),
-
+    path("documents/<int:doc_id>/delete/", views.delete_document, name="delete_document"),
+    
 ]

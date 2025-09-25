@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from .models import *
@@ -132,7 +132,7 @@ def user_login(request):
 def upload_documents(request):
     if request.method == "POST":
         files = request.FILES.getlist("files")
-        department_name = request.POST.get("department")  # may be empty for auto-detect
+        department_name = request.POST.get("department")  
 
         if not files:
             messages.error(request, "No files selected for upload.")
@@ -158,18 +158,17 @@ def upload_documents(request):
                     translate=True
                 )
 
-                # Determine Department
                 if department_name:
                     dept, _ = Department.objects.get_or_create(name=department_name)
                 else:
-                    dept = None  # auto-detect can be implemented later
+                    dept = None  
                 
                 # Create Document record
                 doc = Document.objects.create(
                     title=f.name,
                     uploaded_by=request.user,
                     department=dept,
-                    file=f,  # This will save the uploaded file to MEDIA_ROOT/documents/
+                    file=f,  
                     extracted_text=result.get("extracted_text", ""),
                     translated_text=result.get("translated_text", ""),
                     summary=result.get("summary", ""),
@@ -191,7 +190,21 @@ def upload_documents(request):
         messages.success(request, "Files uploaded and processed successfully!")
         return redirect(request.META.get("HTTP_REFERER", "/"))
 
+@login_required
+def delete_document(request, doc_id):
+    document = get_object_or_404(Document, id=doc_id)
 
+    if request.method == "POST":
+        # Delete the file from storage
+        if document.file:
+            document.file.delete(save=False)
+
+        document.delete()
+        messages.success(request, "Document deleted successfully!")
+    else:
+        messages.error(request, "Invalid request method.")
+
+    return redirect("admin_dashboard")
 
 
 # -------------------------
